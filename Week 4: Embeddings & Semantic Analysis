@@ -1,0 +1,400 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyObvn3b19qL/Uc6UGVawCx9",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/dethhe/nlpcc-ui-2025/blob/main/Week%204%3A%20Embeddings%20%26%20Semantic%20Analysis\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from google.colab import drive\n",
+        "drive.mount('/content/drive', force_remount=True)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "IR094YQjTSHo",
+        "outputId": "6f2e56de-c187-4e7a-f41f-c46656ef3936"
+      },
+      "execution_count": 14,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Mounted at /content/drive\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "\n",
+        "# --- GANTI DENGAN PATH YANG SUDAH DIVERIFIKASI ---\n",
+        "# Berdasarkan output os.listdir(), buat path yang benar di sini:\n",
+        "# Contoh jika file ada di MyDrive:\n",
+        "# path_ke_file = '/content/drive/MyDrive/drive/Review Crocs Fiktif.csv'\n",
+        "# Contoh jika file ada di subfolder 'FolderSaya' di MyDrive:\n",
+        "# path_ke_file = '/content/drive/MyDrive/drive/Review Crocs Fiktif.csv'\n",
+        "path_ke_file = '/content/drive/MyDrive/drive/Review Crocs Fiktif.csv'\n",
+        "try:\n",
+        "    df_ulasan = pd.read_csv(path_ke_file)\n",
+        "    print(f\"DataFrame berhasil dimuat dari: {path_ke_file}\")\n",
+        "    print(\"Jumlah baris dan kolom:\", df_ulasan.shape)\n",
+        "    print(df_ulasan.head())\n",
+        "    # ... sisa kode Anda ...\n",
+        "\n",
+        "except FileNotFoundError:\n",
+        "    print(f\"ERROR: File MASIH tidak ditemukan di path '{path_ke_file}'.\")\n",
+        "    print(\"Mohon periksa kembali output dari os.listdir() dan pastikan path dan nama file 100% akurat, termasuk huruf besar/kecil dan spasi.\")\n",
+        "except Exception as e:\n",
+        "    print(f\"Terjadi kesalahan saat membaca CSV: {e}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "WaWU1rP-V_a2",
+        "outputId": "ceefc9de-df23-436c-a224-d18d293dea6d"
+      },
+      "execution_count": 16,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "DataFrame berhasil dimuat dari: /content/drive/MyDrive/drive/Review Crocs Fiktif.csv\n",
+            "Jumlah baris dan kolom: (150, 2)\n",
+            "               Topik                                             Ulasan\n",
+            "0  Kenyamanan Produk  CrocJoy ini beneran penyelamat kakiku! Seharia...\n",
+            "1  Kenyamanan Produk  Sumpah, nyaman banget! Serasa jalan di atas aw...\n",
+            "2  Kenyamanan Produk  Ringan, empuk, adem. Paket komplit buat kenyam...\n",
+            "3  Kenyamanan Produk  Awalnya biasa aja, tapi makin lama dipakai mak...\n",
+            "4  Kenyamanan Produk  Lumayan nyaman sih buat sehari-hari, tapi kala...\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from google.colab import userdata\n",
+        "import openai # Import openai di sini agar bisa langsung digunakan setelah key didapat\n",
+        "\n",
+        "try:\n",
+        "    openai_api_key = userdata.get('OPENAI_API_KEY')\n",
+        "    if not openai_api_key:\n",
+        "        raise ValueError(\"API key 'OPENAI_API_KEY' tidak ditemukan di Colab Secrets.\")\n",
+        "    print(\"OpenAI API Key berhasil diambil dari Colab Secrets.\")\n",
+        "\n",
+        "    # Inisialisasi OpenAI client di sini setelah API key berhasil didapatkan\n",
+        "    client = openai.OpenAI(api_key=openai_api_key)\n",
+        "    print(\"OpenAI client berhasil diinisialisasi.\")\n",
+        "\n",
+        "except Exception as e:\n",
+        "    print(f\"Error: {e}\")\n",
+        "    print(\"Pastikan Anda sudah menambahkan API key Anda ke Colab Secrets dengan nama 'OPENAI_API_KEY' dan mengaktifkan 'Notebook access'.\")\n",
+        "    client = None # Set client ke None jika gagal"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Ctb7wCXfX8Zk",
+        "outputId": "dd0097cc-2d10-4ebb-9f5f-7be706fbbfef"
+      },
+      "execution_count": 22,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Error: Secret OPENAI_API_KEY does not exist.\n",
+            "Pastikan Anda sudah menambahkan API key Anda ke Colab Secrets dengan nama 'OPENAI_API_KEY' dan mengaktifkan 'Notebook access'.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "import openai # Pustaka untuk OpenAI\n",
+        "from google.colab import userdata\n",
+        "import time\n",
+        "\n",
+        "# ---------------------------------------------------------------------------\n",
+        "# Langkah 1: Konfigurasi API Key OpenAI (WAJIB JALANKAN & SESUAIKAN)\n",
+        "# ---------------------------------------------------------------------------\n",
+        "# Pastikan Anda sudah menyimpan API Key OpenAI Anda di Colab Secrets\n",
+        "# dengan nama 'OPENAI_API_KEY'\n",
+        "\n",
+        "NAMA_SECRET_OPENAI_KEY = 'OPENAI_API_KEY' # Ini adalah nama secret Anda\n",
+        "\n",
+        "try:\n",
+        "    OPENAI_API_KEY_VALUE = userdata.get(NAMA_SECRET_OPENAI_KEY)\n",
+        "    if not OPENAI_API_KEY_VALUE:\n",
+        "        raise ValueError(f\"API Key '{NAMA_SECRET_OPENAI_KEY}' tidak ditemukan di Colab Secrets. Harap tambahkan terlebih dahulu.\")\n",
+        "\n",
+        "    # Konfigurasi OpenAI API Key\n",
+        "    openai.api_key = OPENAI_API_KEY_VALUE\n",
+        "    print(\"🎉 API Key OpenAI berhasil dikonfigurasi.\")\n",
+        "\n",
+        "except Exception as e:\n",
+        "    print(f\" Gagal mengkonfigurasi API Key OpenAI: {e}\")\n",
+        "    print(\"🔴 Pastikan Anda telah menambahkan API Key ke Colab Secrets dengan nama yang benar ('OPENAI_API_KEY') dan Notebook access diaktifkan.\")\n",
+        "    raise SystemExit(\"Konfigurasi API Key gagal.\")\n",
+        "\n",
+        "# ---------------------------------------------------------------------------\n",
+        "# Langkah 2: Buat Contoh Kumpulan Data Sintetis (Ganti dengan data Anda)\n",
+        "# ---------------------------------------------------------------------------\n",
+        "data_sintetis = {\n",
+        "    'teks': [\n",
+        "        \"Ulasan ini sangat positif, produknya luar biasa!\",\n",
+        "        \"Saya kecewa dengan kualitas barang yang diterima.\",\n",
+        "        \"Pelayanan pelanggan cepat dan membantu.\",\n",
+        "    ],\n",
+        "    'label': [\n",
+        "        \"positif\",\n",
+        "        \"negatif\",\n",
+        "        \"positif\",\n",
+        "    ]\n",
+        "}\n",
+        "df_sintetis = pd.DataFrame(data_sintetis)\n",
+        "print(\"\\nContoh Kumpulan Data Sintetis:\")\n",
+        "print(df_sintetis)\n",
+        "\n",
+        "# ---------------------------------------------------------------------------\n",
+        "# Langkah 3: Fungsi untuk Menghasilkan Embedding menggunakan Model API OpenAI\n",
+        "# ---------------------------------------------------------------------------\n",
+        "# Model embedding OpenAI yang umum digunakan misalnya \"text-embedding-ada-002\"\n",
+        "# atau model yang lebih baru seperti \"text-embedding-3-small\" atau \"text-embedding-3-large\"\n",
+        "\n",
+        "def dapatkan_embedding_openai(teks, model_embedding=\"text-embedding-3-small\"):\n",
+        "    \"\"\"\n",
+        "    Menghasilkan embedding untuk teks yang diberikan menggunakan model OpenAI.\n",
+        "\n",
+        "    Args:\n",
+        "        teks (str): Teks yang akan di-embed.\n",
+        "        model_embedding (str): Nama model embedding OpenAI yang akan digunakan.\n",
+        "\n",
+        "    Returns:\n",
+        "        list: Vektor embedding jika berhasil, None jika gagal.\n",
+        "    \"\"\"\n",
+        "    if not teks or not isinstance(teks, str) or teks.strip() == \"\":\n",
+        "        print(\"⚠️ Teks input kosong atau tidak valid, mengembalikan None.\")\n",
+        "        return None\n",
+        "    try:\n",
+        "        teks = teks.replace(\"\\n\", \" \") # Model OpenAI merekomendasikan mengganti newline dengan spasi\n",
+        "        response = openai.embeddings.create(input=[teks], model=model_embedding)\n",
+        "        return response.data[0].embedding\n",
+        "    except Exception as e:\n",
+        "        print(f\"❌ Terjadi kesalahan saat menghasilkan embedding OpenAI untuk teks: '{teks[:50]}...'\")\n",
+        "        print(f\"Error: {e}\")\n",
+        "        return None\n",
+        "\n",
+        "# ---------------------------------------------------------------------------\n",
+        "# Langkah 4: Terapkan Fungsi Embedding ke Setiap Teks dalam DataFrame\n",
+        "# ---------------------------------------------------------------------------\n",
+        "print(\"\\nMemulai proses pembuatan embedding untuk setiap teks (OpenAI)...\")\n",
+        "\n",
+        "df_sintetis['embeddings_openai'] = None # Kolom baru untuk embedding OpenAI\n",
+        "berhasil_count_openai = 0\n",
+        "gagal_count_openai = 0\n",
+        "\n",
+        "for index, row in df_sintetis.iterrows():\n",
+        "    teks_untuk_embed = row['teks']\n",
+        "    print(f\"  Memproses teks ke-{index + 1} (OpenAI): '{teks_untuk_embed[:50]}...'\")\n",
+        "\n",
+        "    embedding = dapatkan_embedding_openai(teks_untuk_embed)\n",
+        "\n",
+        "    if embedding:\n",
+        "        df_sintetis.at[index, 'embeddings_openai'] = embedding\n",
+        "        berhasil_count_openai += 1\n",
+        "    else:\n",
+        "        gagal_count_openai += 1\n",
+        "        print(f\"  ⚠️ Gagal mendapatkan embedding OpenAI untuk teks ke-{index + 1}.\")\n",
+        "    time.sleep(0.2) # Jeda kecil antar panggilan, sesuaikan jika perlu\n",
+        "\n",
+        "print(f\"\\nProses embedding OpenAI selesai.\")\n",
+        "print(f\"✅ Berhasil menghasilkan embedding OpenAI untuk {berhasil_count_openai} teks.\")\n",
+        "print(f\" Gagal menghasilkan embedding OpenAI untuk {gagal_count_openai} teks.\")\n",
+        "\n",
+        "# ---------------------------------------------------------------------------\n",
+        "# Langkah 5: Tampilkan DataFrame dengan Kolom Embedding OpenAI\n",
+        "# ---------------------------------------------------------------------------\n",
+        "print(\"\\nDataFrame dengan Kolom Embeddings (OpenAI):\")\n",
+        "print(df_sintetis.head())\n",
+        "\n",
+        "if berhasil_count_openai > 0 and 'embeddings_openai' in df_sintetis.columns:\n",
+        "    contoh_embedding_valid_openai = df_sintetis[df_sintetis['embeddings_openai'].notna()].iloc[0]['embeddings_openai']\n",
+        "    if contoh_embedding_valid_openai:\n",
+        "        print(f\"\\nContoh embedding OpenAI pertama yang berhasil (dimensi: {len(contoh_embedding_valid_openai)}):\")\n",
+        "        print(contoh_embedding_valid_openai[:10])\n",
+        "    else:\n",
+        "        print(\"\\nTidak ada embedding OpenAI yang valid untuk ditampilkan.\")\n",
+        "else:\n",
+        "    print(\"\\nTidak ada embedding OpenAI yang berhasil dibuat untuk ditampilkan.\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ar0gBfyPYLIa",
+        "outputId": "7335916f-94b3-47cb-89ea-1856dce8a644"
+      },
+      "execution_count": 25,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "🎉 API Key OpenAI berhasil dikonfigurasi.\n",
+            "\n",
+            "Contoh Kumpulan Data Sintetis:\n",
+            "                                                teks    label\n",
+            "0   Ulasan ini sangat positif, produknya luar biasa!  positif\n",
+            "1  Saya kecewa dengan kualitas barang yang diterima.  negatif\n",
+            "2            Pelayanan pelanggan cepat dan membantu.  positif\n",
+            "\n",
+            "Memulai proses pembuatan embedding untuk setiap teks (OpenAI)...\n",
+            "  Memproses teks ke-1 (OpenAI): 'Ulasan ini sangat positif, produknya luar biasa!...'\n",
+            "  Memproses teks ke-2 (OpenAI): 'Saya kecewa dengan kualitas barang yang diterima....'\n",
+            "  Memproses teks ke-3 (OpenAI): 'Pelayanan pelanggan cepat dan membantu....'\n",
+            "\n",
+            "Proses embedding OpenAI selesai.\n",
+            "✅ Berhasil menghasilkan embedding OpenAI untuk 3 teks.\n",
+            " Gagal menghasilkan embedding OpenAI untuk 0 teks.\n",
+            "\n",
+            "DataFrame dengan Kolom Embeddings (OpenAI):\n",
+            "                                                teks    label  \\\n",
+            "0   Ulasan ini sangat positif, produknya luar biasa!  positif   \n",
+            "1  Saya kecewa dengan kualitas barang yang diterima.  negatif   \n",
+            "2            Pelayanan pelanggan cepat dan membantu.  positif   \n",
+            "\n",
+            "                                   embeddings_openai  \n",
+            "0  [-0.01374830212444067, -0.012985753826797009, ...  \n",
+            "1  [0.028252538293600082, 0.021472753956913948, -...  \n",
+            "2  [-0.019961420446634293, 0.001859928946942091, ...  \n",
+            "\n",
+            "Contoh embedding OpenAI pertama yang berhasil (dimensi: 1536):\n",
+            "[-0.01374830212444067, -0.012985753826797009, -0.07697255164384842, 0.05970306694507599, 0.010030877776443958, -0.01606958918273449, -0.03465110436081886, 0.04893767461180687, 0.00844971090555191, -0.017987174913287163]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Sel untuk Demonstrasi Pengaturan Aman API Key\n",
+        "from google.colab import userdata\n",
+        "\n",
+        "# 1. Tentukan nama secret yang Anda gunakan di Colab Secrets.\n",
+        "# Ini adalah NAMA yang Anda ketik di kolom \"Name\" pada panel Secrets.\n",
+        "# Jika nama secret Anda adalah \"OPENAI_API_KEY\", maka variabel ini harus berisi string tersebut.\n",
+        "NAMA_SECRET_KEY = 'OPENAI_API_KEY' # PASTIKAN INI ADALAH STRING\n",
+        "\n",
+        "try:\n",
+        "    # 2. Mengambil API Key dari Colab Secrets menggunakan variabel NAMA_SECRET_KEY\n",
+        "    # yang berisi nama secret sebagai string.\n",
+        "    api_key_value = userdata.get(NAMA_SECRET_KEY)\n",
+        "\n",
+        "    if api_key_value:\n",
+        "        print(f\"✅ Kunci API '{NAMA_SECRET_KEY}' berhasil dimuat dari Colab Secrets.\")\n",
+        "        # Di sini Anda akan menggunakan api_key_value untuk mengkonfigurasi pustaka API Anda.\n",
+        "        # Contoh untuk OpenAI:\n",
+        "        # import openai\n",
+        "        # openai.api_key = api_key_value\n",
+        "        # print(\"Kunci API OpenAI telah dikonfigurasi.\")\n",
+        "    else:\n",
+        "        # Ini bisa terjadi jika secret ada tapi nilainya kosong,\n",
+        "        # atau jika 'Notebook access' tidak diaktifkan meskipun secret ada.\n",
+        "        print(f\"⚠️ Kunci API '{NAMA_SECRET_KEY}' ditemukan namun nilainya kosong, atau 'Notebook access' mungkin tidak aktif.\")\n",
+        "        print(\"Pastikan secret memiliki nilai dan 'Notebook access' diaktifkan di panel Secrets.\")\n",
+        "\n",
+        "except userdata.SecretNotFoundError:\n",
+        "    # Menangkap error spesifik jika secret tidak ditemukan\n",
+        "    print(f\"❌ Kunci API dengan nama '{NAMA_SECRET_KEY}' TIDAK DITEMUKAN di Colab Secrets.\")\n",
+        "    print(\"Pastikan Anda telah menambahkan secret dengan nama yang SAMA PERSIS (termasuk huruf besar/kecil) \"\n",
+        "          \"di panel 'Secrets' (ikon kunci 🔑) dan 'Notebook access' untuk secret tersebut diaktifkan.\")\n",
+        "except Exception as e:\n",
+        "    # Menangkap error umum lainnya\n",
+        "    print(f\"❌ Terjadi kesalahan umum saat mencoba mengakses kunci API '{NAMA_SECRET_KEY}': {e}\")\n",
+        "    print(\"Periksa konfigurasi Colab Secrets Anda.\")\n",
+        "\n",
+        "\n",
+        "# PERINGATAN: JANGAN PERNAH MELAKUKAN HARDCODE KUNCI API DI SINI\n",
+        "# CONTOH YANG SALAH: api_key_salah = \"sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" # <== JANGAN LAKUKAN INI!"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "3NrR2u-Oagj4",
+        "outputId": "b91bd239-9bc7-47a8-a2b1-9bcdcccbb7bd"
+      },
+      "execution_count": 26,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "✅ Kunci API 'OPENAI_API_KEY' berhasil dimuat dari Colab Secrets.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Dokumentasi Keamanan Kunci API\n",
+        "\n",
+        "Mengapa Colab Secrets Aman?\n",
+        "\n",
+        "Colab Secrets adalah metode yang aman untuk mengelola kunci API karena:\n",
+        "\n",
+        "Tidak Menyimpan Kunci di Kode: Kunci API tidak ditulis langsung di notebook, sehingga aman jika notebook dibagikan atau disimpan ke GitHub.\n",
+        "Tidak Masuk ke Riwayat Versi: Karena tidak ada di kode, kunci API tidak akan terekam oleh sistem kontrol versi seperti Git.\n",
+        "Akses Terkontrol: Hanya notebook yang diberi izin yang bisa mengakses secret tersebut.\n",
+        "Manajemen Terpusat: Mudah untuk memperbarui atau mencabut kunci API dari satu tempat tanpa mengubah kode.\n",
+        "Mengapa Hardcoding Kunci API Buruk?\n",
+        "\n",
+        "Hardcoding (menulis kunci API langsung di kode) sangat berbahaya karena:\n",
+        "\n",
+        "Risiko Kebocoran Tinggi: Jika kode dibagikan atau repositori menjadi publik, kunci API Anda akan terekspos ke siapa saja.\n",
+        "Penyalahgunaan Akun: Kunci yang bocor dapat disalahgunakan untuk mengakses layanan atas nama Anda, berpotensi menimbulkan biaya atau kerusakan.\n",
+        "Sulit Dikelola: Mengganti kunci yang bocor menjadi rumit karena harus diubah di banyak tempat.\n",
+        "Pelanggaran Praktik Keamanan: Merupakan praktik yang buruk dan seringkali melanggar standar keamanan.\n",
+        "Kesimpulan: Menggunakan Colab Secrets adalah praktik terbaik untuk menjaga keamanan kunci API Anda, sementara hardcoding harus selalu dihindari."
+      ],
+      "metadata": {
+        "id": "SQBRwA6ubIoz"
+      }
+    }
+  ]
+}
