@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Comment Analyzer - Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 20px;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .terminal-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #000;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+        
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .terminal-buttons {
+            display: flex;
+            gap: 5px;
+            margin-right: 15px;
+        }
+        
+        .btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .btn-close { background-color: #ff5f56; }
+        .btn-minimize { background-color: #ffbd2e; }
+        .btn-maximize { background-color: #27ca3f; }
+        
+        .terminal-title {
+            color: #fff;
+            font-weight: bold;
+        }
+        
+        .prompt {
+            color: #00ff00;
+            margin-bottom: 10px;
+        }
+        
+        .prompt::before {
+            content: "Whats-insight? : ";
+            color: #00ff41;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        .url-input {
+            background-color: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            width: 70%;
+            border-bottom: 1px solid #333;
+            padding: 5px 0;
+            margin-right: 10px;
+        }
+        
+        .url-input:focus {
+            border-bottom-color: #00ff00;
+        }
+        
+        .analyze-btn {
+            background-color: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: inherit;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .analyze-btn:hover {
+            background-color: #00ff00;
+            color: #000;
+        }
+        
+        .analyze-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .output-section {
+            margin-top: 20px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+        
+        .loading {
+            color: #ffff00;
+        }
+        
+        .loading::after {
+            content: "";
+            animation: dots 1.5s infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: ""; }
+            40% { content: "."; }
+            60% { content: ".."; }
+            80%, 100% { content: "..."; }
+        }
+        
+        .result {
+            background-color: #001100;
+            border-left: 3px solid #00ff00;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .error {
+            color: #ff4444;
+            background-color: #110000;
+            border-left: 3px solid #ff4444;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .info {
+            color: #44aaff;
+            margin: 10px 0;
+        }
+        
+        .analysis-text {
+            white-space: pre-wrap;
+            line-height: 1.8;
+            color: #fff;
+        }
+        
+        .cursor {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .command-history {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .typing-effect {
+            overflow: hidden;
+            border-right: 2px solid #00ff00;
+            white-space: nowrap;
+            animation: typing 2s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: #00ff00; }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div class="terminal-buttons">
+                <div class="btn btn-close"></div>
+                <div class="btn btn-minimize"></div>
+                <div class="btn btn-maximize"></div>
+            </div>
+            <div class="terminal-title">whatsinsight? v1.0</div>
+        </div>
+        
+        <div class="welcome-message">
+            <div class="prompt typing-effect">Analisis Komentar YouTube</div>
+            <div style="color: #888; margin: 10px 0;">
+                Masukkan URL video YouTube untuk menganalisis komentar
+            </div>
+        </div>
+        
+        <div class="input-section">
+            <div class="prompt">Masukkan URL YouTube:</div>
+            <input type="text" 
+                   id="youtubeUrl" 
+                   class="url-input" 
+                   placeholder="https://www.youtube.com/watch?v=..."
+                   autocomplete="off">
+            <button id="analyzeBtn" class="analyze-btn">ANALYZE</button>
+        </div>
+        
+        <div id="output" class="output-section" style="display: none;">
+            <div class="prompt">Output:</div>
+            <div id="outputContent"></div>
+        </div>
+        
+        <div class="command-history">
+            <div>Perintah yang tersedia:</div>
+            <div>- analyze: Menganalisis komentar video YouTube</div>
+            <div>- clear: Membersihkan output (Ctrl+L)</div>
+            <div>- help: Menampilkan bantuan</div>
+        </div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('youtubeUrl');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const output = document.getElementById('output');
+        const outputContent = document.getElementById('outputContent');
+
+        // Event listeners
+        analyzeBtn.addEventListener('click', analyzeVideo);
+        urlInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeVideo();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                clearOutput();
+            }
+            if (e.key === 'F1') {
+                e.preventDefault();
+                showHelp();
+            }
+        });
+
+        function analyzeVideo() {
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                showError('Masukkan URL YouTube terlebih dahulu');
+                return;
+            }
+            
+            if (!isValidYouTubeURL(url)) {
+                showError('URL YouTube tidak valid');
+                return;
+            }
+
+            showOutput();
+            showLoading();
+            analyzeBtn.disabled = true;
+
+            // Simulasi API call (ganti dengan fetch ke Flask endpoint)
+            fetch('/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: url })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showResult(data);
+                } else {
+                    showError(data.error || 'Terjadi kesalahan');
+                }
+            })
+            .catch(error => {
+                showError('Koneksi error: ' + error.message);
+            })
+            .finally(() => {
+                analyzeBtn.disabled = false;
+            });
+        }
+
+        function showLoading() {
+            outputContent.innerHTML = `
+                <div class="loading">Menganalisis komentar YouTube</div>
+                <div class="info">→ Mengambil data komentar...</div>
+                <div class="info">→ Memproses ...</div>
+                <div class="info">→ Menyiapkan hasil analisis...</div>
+            `;
+        }
+
+        function showResult(data) {
+            const timestamp = new Date().toLocaleString('id-ID');
+            outputContent.innerHTML = `
+                <div class="info">✓ Analisis selesai [${timestamp}]</div>
+                <div class="info">Video ID: ${data.video_id}</div>
+                <div class="info">Total komentar dianalisis: ${data.total_comments}</div>
+                <div class="result">
+                    <div style="color: #00ff00; margin-bottom: 10px;">🤖 HASIL ANALISIS AI:</div>
+                    <div class="analysis-text">${data.analysis}</div>
+                </div>
+                <div class="info">Analisis selesai. Ketik perintah baru atau masukkan URL lain.</div>
+            `;
+        }
+
+        function showError(message) {
+            const timestamp = new Date().toLocaleString('id-ID');
+            outputContent.innerHTML = `
+                <div class="error">
+                    ❌ ERROR [${timestamp}]<br>
+                    ${message}
+                </div>
+                <div class="info">Periksa URL dan coba lagi.</div>
+            `;
+        }
+
+        function showOutput() {
+            output.style.display = 'block';
+        }
+
+        function clearOutput() {
+            output.style.display = 'none';
+            outputContent.innerHTML = '';
+            urlInput.value = '';
+            urlInput.focus();
+        }
+
+        function showHelp() {
+            showOutput();
+            outputContent.innerHTML = `
+                <div class="result">
+                    <div style="color: #00ff00; margin-bottom: 10px;">📖 BANTUAN:</div>
+                    <div class="analysis-text">
+YouTube Comment Analyzer v1.0
+
+CARA PENGGUNAAN:
+1. Masukkan URL video YouTube yang valid
+2. Klik tombol ANALYZE atau tekan Enter
+3. Tunggu proses analisis selesai
+
+SHORTCUT KEYBOARD:
+- Enter: Mulai analisis
+- Ctrl+L: Bersihkan layar
+- F1: Tampilkan bantuan
+
+FORMAT URL YANG DIDUKUNG:
+- https://www.youtube.com/watch?v=VIDEO_ID
+- https://youtu.be/VIDEO_ID
+
+FITUR:
+- Analisis sentimen komentar
+- Identifikasi topik utama
+- Deteksi emosi dominan
+- Ringkasan respons audiens
+
+Dibuat dengan ❤️ menggunakan Python Flask & Gemini AI
+                    </div>
+                </div>
+            `;
+        }
+
+        function isValidYouTubeURL(url) {
+            const patterns = [
+                /^https?:\/\/(www\.)?youtube\.com\/watch\?v=[\w-]+/,
+                /^https?:\/\/youtu\.be\/[\w-]+/
+            ];
+            return patterns.some(pattern => pattern.test(url));
+        }
+
+        // Focus on input when page loads
+        window.addEventListener('load', function() {
+            urlInput.focus();
+        });
+
+        // Terminal cursor effect
+        setInterval(function() {
+            const cursor = document.querySelector('.cursor');
+            if (cursor) {
+                cursor.style.visibility = cursor.style.visibility === 'hidden' ? 'visible' : 'hidden';
+            }
+        }, 500);
+    </script>
+</body>
+</html>
